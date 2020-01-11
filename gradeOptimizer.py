@@ -1,5 +1,6 @@
 from constrainedRandom import *
-
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 
 def get_random_weight():
     """
@@ -156,6 +157,16 @@ class Population:
         best_dna = self.pop[0]
         if self.best_dna is None:
             self.best_dna = self.pop[0]
+            print(self.pop)
+
+        # Prep to create mating_pool
+        fitness_values = []
+        for x in range(len(self.pop)):
+            fitness_values.append(self.pop[x].fitness)
+        fitness_values = np.asarray(fitness_values).reshape(-1, 1)
+        scaler = MinMaxScaler()
+        scaled_fitness_values = list(scaler.fit_transform(fitness_values).flatten())
+
         for x in range(len(self.pop)):
             # record best DNA for generation
             if self.pop[x].fitness > best_dna.fitness:
@@ -163,8 +174,8 @@ class Population:
             # record best DNA all time
             if self.pop[x].fitness > self.best_dna.fitness:
                 self.best_dna = self.pop[x]
-            fitness_smaller = int(self.pop[x].fitness / 10)
-            for i in range(fitness_smaller):
+            # append based on fitness
+            for i in range(int(float(scaled_fitness_values[x])*100)):
                 mating_pool.append(self.pop[x])
 
         print(f'Best of ALL TIME: {self.best_dna}')
@@ -174,6 +185,8 @@ class Population:
         for x in range(len(self.pop)):
             parent_1 = random.choice(mating_pool)
             parent_2 = random.choice(mating_pool)
+            # parent_1 = best_dna
+            # parent_2 = random.choice(self.pop)
             child = parent_1.mate(parent_2)
             new_pop.append(child)
 
@@ -190,7 +203,7 @@ DNA.assignment_grade = 73
 DNA.quizzes_grade = 64
 DNA.project_grade = 55
 
-population = Population(500, 0.05)
+population = Population(100, 0.05)
 
 # Keep running forever until user stops
 while True:
